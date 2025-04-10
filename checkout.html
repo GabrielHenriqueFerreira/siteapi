@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mercado-pago:tracking" content="disabled">
+    <meta name="newrelic" content="disabled">
+    <title>Finalizar Compra - Br Tools</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .checkout-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .checkout-header h1 {
+            color: #0a1fac;
+            margin-bottom: 10px;
+        }
+        
+        .checkout-content {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .checkout-form {
+            flex: 2;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .order-summary {
+            flex: 1;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .order-summary h2 {
+            margin-bottom: 20px;
+            color: #0a1fac;
+        }
+        
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .order-total {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn-submit {
+            background-color: #0a1fac;
+            color: white;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-submit:hover {
+            background-color: #072c8f;
+        }
+
+        /* ======================
+   ERROR STATES & VALIDATION
+   ====================== */
+.input-error {
+    border-color: #dc3545 !important;
+  }
+  
+  .error-message {
+    color: #dc3545;
+    font-size: 0.8rem;
+    margin-top: 5px;
+    display: block;
+    animation: fadeIn 0.3s ease-in;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* ======================
+     LOADING STATES
+     ====================== */
+  .loading-spinner {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+    color: #0a1fac;
+    font-size: 0.9rem;
+  }
+  
+  .loading-spinner i {
+    font-size: 1.2rem;
+  }
+  
+  .bx-spin {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* ======================
+     BUTTON STATES
+     ====================== */
+  .btn-submit {
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-submit:disabled {
+    background-color: #6c757d !important;
+    cursor: not-allowed;
+    opacity: 0.8;
+  }
+  
+  .btn-submit .btn-loader {
+    display: none;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .btn-submit.loading {
+    color: transparent;
+  }
+  
+  .btn-submit.loading .btn-loader {
+    display: block;
+  }
+  
+  /* ======================
+     ORDER SUMMARY ENHANCEMENTS
+     ====================== */
+  .order-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .order-item:last-child {
+    border-bottom: none;
+  }
+  
+  .order-item.subtotal {
+    font-weight: 600;
+  }
+  
+  .order-item.frete {
+    color: #28a745;
+  }
+  
+  .order-total {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0a1fac;
+  }
+  
+  /* ======================
+     ALTERNATIVE PAYMENT SECTION
+     ====================== */
+  .alternative-payment {
+    display: none;
+    margin-top: 25px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #0a1fac;
+    animation: slideDown 0.4s ease-out;
+  }
+  
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .alternative-payment h3 {
+    color: #0a1fac;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+  }
+  
+  .alternative-payment ul {
+    margin: 12px 0;
+    padding-left: 20px;
+    list-style-type: disc;
+  }
+  
+  .alternative-payment li {
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  
+  .payment-method {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #ddd;
+  }
+  
+  .payment-method i {
+    font-size: 1.5rem;
+    color: #28a745;
+  }
+  
+  /* ======================
+     RESPONSIVE ADJUSTMENTS
+     ====================== */
+  @media (max-width: 768px) {
+    .order-item {
+      font-size: 0.9rem;
+    }
+    
+    .order-total {
+      font-size: 1rem;
+    }
+    
+    .alternative-payment {
+      padding: 15px;
+    }
+  }
+  
+  /* ======================
+     FORM FIELD STATES
+     ====================== */
+  .form-group input:focus {
+    border-color: #0a1fac;
+    box-shadow: 0 0 0 2px rgba(10, 31, 172, 0.1);
+    outline: none;
+  }
+  
+  .form-group input.valid {
+    border-color: #28a745 !important;
+  }
+  
+  /* ======================
+     CEP LOADING STATE
+     ====================== */
+  .cep-loading {
+    position: relative;
+  }
+  
+  .cep-loading::after {
+    content: '';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(10, 31, 172, 0.2);
+    border-top-color: #0a1fac;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+        
+  
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="checkout-header">
+            <h1>Finalizar Compra</h1>
+            <p>Preencha seus dados para continuar</p>
+        </header>
+        
+        <div class="checkout-content">
+            <form id="checkoutForm" class="checkout-form">
+                <h2>Informações Pessoais</h2>
+                <div class="form-group">
+                    <label for="nome">Nome Completo</label>
+                    <input type="text" id="nome" name="nome" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefone">Telefone</label>
+                    <input type="tel" id="telefone" name="telefone" required>
+                </div>
+                
+                <h2>Endereço de Entrega</h2>
+                
+                <div class="form-group">
+                    <label for="cep">CEP</label>
+                    <input type="text" id="cep" name="cep" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="rua">Rua</label>
+                        <input type="text" id="rua" name="rua" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="numero">Número</label>
+                        <input type="text" id="numero" name="numero" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="complemento">Complemento</label>
+                    <input type="text" id="complemento" name="complemento">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="bairro">Bairro</label>
+                        <input type="text" id="bairro" name="bairro" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cidade">Cidade</label>
+                        <input type="text" id="cidade" name="cidade" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="estado">Estado</label>
+                    <input type="text" id="estado" name="estado" required>
+                </div>
+                
+                <button type="submit" class="btn-submit">Continuar para Pagamento</button>
+            </form>
+            
+            <div class="order-summary">
+                <h2>Resumo do Pedido</h2>
+                <div id="order-items">
+                    <!-- Itens serão preenchidos por JavaScript -->
+                </div>
+                <div class="order-total">
+                    <span>Total:</span>
+                    <span id="order-total">R$ 0,00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <script>
+        // Recupera os dados do carrinho do localStorage
+        const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+        const frete = parseFloat(localStorage.getItem('frete')) || 0;
+        
+        function exibirResumoPedido() {
+            const orderItems = document.getElementById('order-items');
+            let subtotal = 0;
+            
+            if (carrinho.length === 0) {
+                orderItems.innerHTML = '<p>Seu carrinho está vazio</p>';
+                document.getElementById('order-total').textContent = 'R$ 0,00';
+                return;
+            }
+            
+            orderItems.innerHTML = '';
+            
+            // Add cart items
+            carrinho.forEach(item => {
+                const itemTotal = item.preco * item.quantidade;
+                subtotal += itemTotal;
+                
+                const itemElement = document.createElement('div');
+                itemElement.className = 'order-item';
+                itemElement.innerHTML = `
+                    <span>${item.nome} x${item.quantidade}</span>
+                    <span>R$ ${itemTotal.toFixed(2)}</span>
+                `;
+                
+                orderItems.appendChild(itemElement);
+            });
+            
+            // Add subtotal row
+            const subtotalElement = document.createElement('div');
+            subtotalElement.className = 'order-item';
+            subtotalElement.innerHTML = `
+                <span>Subtotal</span>
+                <span>R$ ${subtotal.toFixed(2)}</span>
+            `;
+            orderItems.appendChild(subtotalElement);
+            
+            // Add freight row
+            const freteElement = document.createElement('div');
+            freteElement.className = 'order-item';
+            const freteText = frete === 0 ? 'Grátis' : `R$ ${frete.toFixed(2)}`;
+            freteElement.innerHTML = `
+                <span>Frete</span>
+                <span>${freteText}</span>
+            `;
+            orderItems.appendChild(freteElement);
+            
+            // Add total row
+            const total = subtotal + frete;
+            document.getElementById('order-total').textContent = `R$ ${total.toFixed(2)}`;
+        }
+        
+        // Preenche automaticamente o endereço quando o CEP é digitado
+        document.getElementById('cep').addEventListener('blur', async function() {
+            const cep = this.value.replace(/\D/g, '');
+            
+            if (cep.length !== 8) return;
+            
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const data = await response.json();
+                
+                if (!data.erro) {
+                    document.getElementById('rua').value = data.logradouro;
+                    document.getElementById('bairro').value = data.bairro;
+                    document.getElementById('cidade').value = data.localidade;
+                    document.getElementById('estado').value = data.uf;
+                    document.getElementById('complemento').focus();
+                }
+            } catch (error) {
+                console.error('Erro ao buscar CEP:', error);
+            }
+        });
+        
+// Add this to your existing script section
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    if (!validateForm()) {
+        e.preventDefault();
+    }
+});
+
+function validateForm() {
+    let isValid = true;
+    
+    // Clear previous errors
+    document.querySelectorAll('.error-message').forEach(el => el.remove());
+    
+    // Name validation
+    const nome = document.getElementById('nome');
+    if (!nome.value.trim() || nome.value.length < 3) {
+        showError(nome, 'Por favor, insira seu nome completo');
+        isValid = false;
+    }
+    
+    // Email validation
+    const email = document.getElementById('email');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.value)) {
+        showError(email, 'Por favor, insira um e-mail válido');
+        isValid = false;
+    }
+    
+    // Phone validation (Brazilian format)
+    const telefone = document.getElementById('telefone');
+    const phoneRegex = /^(\d{10,11}|\(\d{2}\)\s\d{4,5}-\d{4})$/;
+    if (!phoneRegex.test(telefone.value)) {
+        showError(telefone, 'Por favor, insira um telefone válido (DDD + número)');
+        isValid = false;
+    }
+    
+    // CEP validation
+    const cep = document.getElementById('cep');
+    const cepRegex = /^\d{5}-?\d{3}$/;
+    if (!cepRegex.test(cep.value)) {
+        showError(cep, 'Por favor, insira um CEP válido (8 dígitos)');
+        isValid = false;
+    }
+    
+    // Address validation
+    const requiredAddressFields = ['rua', 'numero', 'bairro', 'cidade', 'estado'];
+    requiredAddressFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field.value.trim()) {
+            showError(field, 'Este campo é obrigatório');
+            isValid = false;
+        }
+    });
+    
+    return isValid;
+}
+
+function showError(inputElement, message) {
+    const errorElement = document.createElement('div');
+    errorElement.className = 'error-message';
+    errorElement.style.color = 'red';
+    errorElement.style.fontSize = '0.8rem';
+    errorElement.style.marginTop = '5px';
+    errorElement.textContent = message;
+    
+    inputElement.style.borderColor = 'red';
+    inputElement.parentNode.insertBefore(errorElement, inputElement.nextSibling);
+    
+    // Remove error on correction
+    inputElement.addEventListener('input', function() {
+        if (this.value.trim()) {
+            this.style.borderColor = '#ddd';
+            if (this.nextElementSibling && this.nextElementSibling.className === 'error-message') {
+                this.nextElementSibling.remove();
+            }
+        }
+    });
+}
+
+    // No seu checkout.html, atualize a parte do script que lida com o Mercado Pago:
+// Configuração do Mercado Pago
+const mp = new MercadoPago('APP_USR-f2c210df-5eb1-4889-975c-b2ad1ba8c735', {
+    locale: 'pt-BR',
+    advancedFraudPrevention: false,  // Desativa verificações extras
+    trackingDisabled: true          // Desativa completamente o melidata
+});
+document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    // Show loading state
+    const submitButton = document.querySelector('.btn-submit');
+    const originalButtonText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="bx bx-loader-circle bx-spin"></i> Processando...';
+    
+    try {
+        const checkoutData = JSON.parse(localStorage.getItem('checkoutData'));
+        if (!checkoutData) {
+            throw new Error('Dados do carrinho não encontrados');
+        }
+        
+        const formData = {
+            nome: document.getElementById('nome').value,
+            email: document.getElementById('email').value,
+            telefone: document.getElementById('telefone').value,
+            cep: document.getElementById('cep').value,
+            rua: document.getElementById('rua').value,
+            numero: document.getElementById('numero').value,
+            bairro: document.getElementById('bairro').value,
+            cidade: document.getElementById('cidade').value,
+            estado: document.getElementById('estado').value
+        };
+        
+        // Timeout for API request (8 seconds)
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Tempo excedido ao processar pagamento')), 8000)
+        );
+        
+        const response = await Promise.race([
+            fetch('http://localhost:3000/api/create-preference', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    items: checkoutData.items,
+                    payer: formData,
+                    freight: checkoutData.freight
+                })
+            }),
+            timeoutPromise
+        ]);
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Erro ao criar pagamento');
+        }
+        
+        const { init_point } = await response.json();
+        
+        // Save order data before redirecting
+        localStorage.setItem('currentOrder', JSON.stringify({
+            items: checkoutData.items,
+            freight: checkoutData.freight,
+            total: checkoutData.items.reduce((sum, item) => sum + (item.preco * item.quantidade), 0) + checkoutData.freight,
+            customer: formData,
+            date: new Date().toISOString()
+        }));
+        
+        window.location.href = init_point;
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        
+        // Show error to user
+        const errorMessage = error.message.includes('Tempo excedido')
+            ? 'O processamento está demorando muito. Por favor, tente novamente mais tarde.'
+            : 'Erro ao processar pagamento: ' + error.message;
+        
+        alert(errorMessage);
+        
+        // Show alternative payment options
+        showAlternativePaymentOptions();
+        
+    } finally {
+        // Restore button state
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+    }
+});
+
+function showAlternativePaymentOptions() {
+    // Create or show alternative payment section
+    let altPaymentSection = document.getElementById('alternative-payment');
+    
+    if (!altPaymentSection) {
+        altPaymentSection = document.createElement('div');
+        altPaymentSection.id = 'alternative-payment';
+        altPaymentSection.style.marginTop = '20px';
+        altPaymentSection.style.padding = '15px';
+        altPaymentSection.style.backgroundColor = '#f8f9fa';
+        altPaymentSection.style.borderRadius = '5px';
+        
+        altPaymentSection.innerHTML = `
+            <h3>Problemas com o pagamento?</h3>
+            <p>Você pode:</p>
+            <ul>
+                <li>Tentar novamente mais tarde</li>
+                <li>Realizar um PIX para: 42.721.573/0001-54</li>
+                <li>Entrar em contato pelo WhatsApp: (16) 99192-8412</li>
+            </ul>
+            <p>Envie o comprovante para josejunior71@gmail.com</p>
+        `;
+        
+        document.querySelector('.checkout-form').appendChild(altPaymentSection);
+    } else {
+        altPaymentSection.style.display = 'block';
+    }
+}
+
+const checkoutData = JSON.parse(localStorage.getItem('checkoutData')) || {
+    items: [],
+    freight: 0,
+    subtotal: 0,
+    total: 0
+};
+
+// Format currency to Brazilian format
+function formatCurrency(value) {
+    return 'R$ ' + value.toFixed(2).replace('.', ',');
+}
+
+function exibirResumoPedido() {
+    const orderItems = document.getElementById('order-items');
+    
+    // Clear previous items
+    orderItems.innerHTML = '';
+    
+    if (checkoutData.items.length === 0) {
+        orderItems.innerHTML = '<p>Seu carrinho está vazio</p>';
+        document.getElementById('order-total').textContent = formatCurrency(0);
+        return;
+    }
+    
+    // Add cart items
+    checkoutData.items.forEach(item => {
+        const itemTotal = item.preco * item.quantidade;
+        
+        const itemElement = document.createElement('div');
+        itemElement.className = 'order-item';
+        itemElement.innerHTML = `
+            <span>${item.nome} x${item.quantidade}</span>
+            <span>${formatCurrency(itemTotal)}</span>
+        `;
+        
+        orderItems.appendChild(itemElement);
+    });
+    
+    // Add subtotal
+    const subtotal = checkoutData.items.reduce((sum, item) => sum + (item.preco * item.quantidade), 0);
+    checkoutData.subtotal = subtotal; // Atualiza o subtotal
+    
+    const subtotalElement = document.createElement('div');
+    subtotalElement.className = 'order-item subtotal';
+    subtotalElement.innerHTML = `
+        <span>Subtotal</span>
+        <span>${formatCurrency(subtotal)}</span>
+    `;
+    orderItems.appendChild(subtotalElement);
+    
+    // Add freight - CORREÇÃO AQUI: usar frete do checkoutData
+    const freteElement = document.createElement('div');
+    freteElement.className = 'order-item frete';
+    freteElement.innerHTML = `
+        <span>Frete</span>
+        <span>${checkoutData.freight === 0 ? 'Grátis' : formatCurrency(checkoutData.freight)}</span>
+    `;
+    orderItems.appendChild(freteElement);
+    
+    // Calculate and display total
+    checkoutData.total = subtotal + checkoutData.freight;
+    document.getElementById('order-total').textContent = formatCurrency(checkoutData.total);
+}
+// Call the function when page loads
+document.addEventListener('DOMContentLoaded', exibirResumoPedido);
+
+    </script>
+</body>
+</html>
